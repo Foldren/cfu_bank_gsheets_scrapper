@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from source.banks_services.tinkoff import Tinkoff
 from source.config import BANKS_RUS_NAMES
-from source.init_models import User, Category, AdminBank
+from source.init_models import User, Category, PaymentAccount
 
 
 async def get_loop_interval_to_four_hour():
@@ -45,18 +45,30 @@ async def get_queue_categories_list_by_cat_id(category_id: int):
     return categories_names_list
 
 
-async def get_user_bank_statement(bank: AdminBank, from_date) -> list:
-    match bank.name:
+async def get_payment_account_statement(payment_account: PaymentAccount) -> list:
+    bank = await payment_account.bank
+
+    # Фиксируем дату, с которой нужно начать подгрузку операций из выписок
+    if payment_account.last_date_reload_statement is None:
+        from_date = payment_account.first_date_load_statement
+    else:
+        from_date = payment_account.last_date_reload_statement
+
+    match bank.bank_name:
         case 'tinkoff':
             return await Tinkoff.get_statement(
                 api_key=bank.api_key,
-                rc_number=bank.number_or_name_account,
+                rc_number=payment_account.number,
                 from_date=from_date,
             )
         case 'module':
             pass
         case 'tochka':
             pass
+
+    # Меняем дату последней подгрузки на сегодня
+    payment_account.last_date_reload_statement = datetime.now()
+    await payment_account.save()
 
 
 async def write_operations_list_in_bd_users():
@@ -71,66 +83,84 @@ async def write_operations_list_in_bd_users():
     admins_rows_in_gts = []
 
     for admin in admins:
-        # Шаг 1: генерируем список категорий, к которым прикреплены Инн организаций ------------------------------------
+        # Шаг 1: генерируем список категорий, к которым прикреплены Инн контрагентов -----------------------------------
         # (для сравнения с операциями из банков)
-        admin_orgs = await admin.admin_organizations.all().exclude(bank_reload_category_id=None)
+        admin_partners = await admin.admin_partners.all().exclude(bank_reload_category_id=None)
 
-        organizations_inn_list = []
-        organizations_cat_queue_list = []
-        for org in admin_orgs:
-            org_reload_category = await org.bank_reload_category
-            cat_queue = await get_queue_categories_list_by_cat_id(org_reload_category.id)
-            organizations_inn_list.append(org.inn)
-            organizations_cat_queue_list.append(cat_queue)
+        partners_inn_list = []
+        partners_category_queue_list = []
+        for partner in admin_partners:
+            partner_bank_reload_category = await partner.bank_reload_category
+            cat_queue = await get_queue_categories_list_by_cat_id(partner_bank_reload_category.id)
+            partners_inn_list.append(partner.inn)
+            partners_category_queue_list.append(cat_queue)
 
         # Шаг 2: Генерируем список строк которые нужно будет добавить в таблицу админа ---------------------------------
         admin_banks = await admin.admin_banks.all()
 
         rows_to_write_in_gt = []
         for bank in admin_banks:
-            if bank.status == 1:
-                from_date = bank.first_date_load_statement if bank.last_date_reload_statement is None \
-                    else bank.last_date_reload_statement
-                bank_stats_operations = await get_user_bank_statement(bank, from_date)
+            bank_payment_accounts = await bank.payment_accounts.all()
 
-                for operation in bank_stats_operations:
-                    # Проверяем привязана ли организация внутри бота, если да, привязываем очередь категории
-                    if operation['org_inn'] in organizations_inn_list:
-                        index_org_in_lists = organizations_inn_list.index(operation['org_inn'])
-                        category_queue = organizations_cat_queue_list[index_org_in_lists]
+            for payment_account in bank_payment_accounts:
+                # Если расчетный счет помечен как активный
+                if payment_account.status == 1:
+                    bank_stats_operations = await get_payment_account_statement(payment_account)
+                    payment_account_organization = await payment_account.organization.first()
+                    organization_name = payment_account_organization.name
 
-                        row_to_write_in_gt = [
-                            'Нет chat_id',
-                            operation['org_name'],
-                            operation['op_date'],
-                            operation['op_type'],
-                            BANKS_RUS_NAMES[bank.name],
-                            operation['volume'],
-                            operation['org_name'],
-                        ]
+                    for operation in bank_stats_operations:
+                        # Проверяем привязана ли организация внутри бота, если да, привязываем очередь категории
+                        if operation['partner_inn'] in partners_inn_list:
+                            index_partner_in_lists = partners_inn_list.index(operation['partner_inn'])
+                            category_queue = partners_category_queue_list[index_partner_in_lists]
 
-                        # Дополняем строку категориями из очереди
-                        for category in category_queue:
-                            row_to_write_in_gt.append(category)
-                    else:
-                        row_to_write_in_gt = [
-                            'Нет chat_id',
-                            operation['org_name'],
-                            operation['op_date'],
-                            operation['op_type'],
-                            BANKS_RUS_NAMES[bank.name],
-                            operation['op_volume'],
-                            operation['org_name'],
-                            'Без распределения'
-                        ]
-                    rows_to_write_in_gt.append(row_to_write_in_gt)
+                            row_to_write_in_gt = [
+                                'Нет chat_id',
+                                operation['partner_name'],
+                                operation['op_date'],
+                                operation['op_type'],
+                                BANKS_RUS_NAMES[bank.bank_name],
+                                operation['volume'],
+                                organization_name,
+                            ]
+
+                            # Дополняем строку категориями из очереди
+                            category_numbs = 1
+                            for category in category_queue:
+                                category_numbs += 1
+                                row_to_write_in_gt.append(category)
+
+                        else:
+                            row_to_write_in_gt = [
+                                'Нет chat_id',
+                                operation['partner_name'],
+                                operation['op_date'],
+                                operation['op_type'],
+                                BANKS_RUS_NAMES[bank.bank_name],
+                                operation['op_volume'],
+                                organization_name,
+                                'Без распределения'
+                            ]
+                            category_numbs = 1
+
+                        # Заполняем оставшиеся поля пустыми строками
+                        for i2 in range(category_numbs, 5):
+                            row_to_write_in_gt.append("")
+
+                        # Добавляем инн контрагента в последний столбец
+                        row_to_write_in_gt.append(operation['partner_inn'])
+
+                        rows_to_write_in_gt.append(row_to_write_in_gt)
 
         # Шаг 3: Добавляем список таблиц и ссылку на таблицу админа в результат ----------------------------------------
         admin_info = await admin.admin_info.all()
-        admins_rows_in_gts.append({
-            'gt_table_url': admin_info.google_table_url,
-            'rows_to_add_in_bd': rows_to_write_in_gt
-        })
+
+        if rows_to_write_in_gt:
+            admins_rows_in_gts.append({
+                'gt_table_url': admin_info.google_table_url,
+                'rows_to_add_in_bd': rows_to_write_in_gt
+            })
 
     print(admins_rows_in_gts)
 

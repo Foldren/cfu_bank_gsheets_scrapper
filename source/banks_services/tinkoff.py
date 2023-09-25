@@ -18,11 +18,15 @@ class Tinkoff:
         headers = {'Authorization': 'Bearer ' + api_key, 'Content-Type': 'application/json'}
         url_operation = 'https://business.tinkoff.ru/openapi/api/v1/statement'
 
-        response = await AsyncClient().get(url=url_operation, headers=headers, params={
-            'accountNumber': rc_number,
-            'from': from_date_frmt,
-            'to': datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-        })
+        response = await AsyncClient().get(
+            url=url_operation,
+            headers=headers,
+            params={
+                'accountNumber': rc_number,
+                'from': from_date_frmt,
+                'to': datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+        )
 
         if response.status_code == 200:
             operations_list = response.json()['operations']
@@ -35,9 +39,9 @@ class Tinkoff:
                 volume_operation = operation["operationAmount"]
                 trxn_date = operation["trxnPostDate"]
                 result_data_list.append({
-                    'org_inn': cp_inn,
-                    'org_name': cp_name,
-                    'op_volume': volume_operation if type_operation == "Доход" else -float(volume_operation),
+                    'partner_inn': cp_inn,
+                    'partner_name': cp_name,
+                    'op_volume': volume_operation if type_operation == "Доход" else -round(volume_operation, 2),
                     'op_type': type_operation,
                     'op_date': trxn_date,
                 })
