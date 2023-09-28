@@ -37,7 +37,7 @@ class Tinkoff:
                 cp_inn = operation['counterParty']["inn"]
                 type_operation = "Расход" if operation["typeOfOperation"] == "Debit" else "Доход"
                 volume_operation = operation["operationAmount"]
-                trxn_date = operation["trxnPostDate"]
+                trxn_date = datetime.strptime(operation["trxnPostDate"], '%Y-%m-%dT%H:%M:%SZ').strftime('%d.%m.%Y %H:%M')
                 result_data_list.append({
                     'partner_inn': cp_inn,
                     'partner_name': cp_name,
