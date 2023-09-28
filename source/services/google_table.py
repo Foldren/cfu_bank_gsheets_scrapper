@@ -1,8 +1,6 @@
-from os import getcwd
-
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
-from source.config import NAME_GOOGLE_TABLE_BD_LIST
+from config import NAME_GOOGLE_TABLE_BD_LIST
 
 
 class GoogleTable:

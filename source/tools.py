@@ -1,8 +1,7 @@
-import traceback
 from datetime import datetime, timedelta
-from source.banks_services.tinkoff import Tinkoff
-from source.config import BANKS_RUS_NAMES
-from source.init_models import User, Category, PaymentAccount
+from banks_services.tinkoff import Tinkoff
+from config import BANKS_RUS_NAMES
+from init_models import User, Category, PaymentAccount
 
 
 async def get_loop_interval_to_four_hour():

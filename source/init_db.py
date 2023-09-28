@@ -1,5 +1,5 @@
 from tortoise import Tortoise
-from source.config import MYSQL_URL
+from config import MYSQL_URL
 
 
 async def init_db():

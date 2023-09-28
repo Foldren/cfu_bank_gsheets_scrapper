@@ -2,9 +2,9 @@ import asyncio
 import traceback
 from tortoise import run_async
 from services.google_table import GoogleTable
-from source.config import LOOP_INTERVAL_TIME
-from source.init_db import init_db
-from source.tools import generate_list_gts_statements_rows, get_loop_interval_to_four_hour
+from config import LOOP_INTERVAL_TIME
+from init_db import init_db
+from tools import generate_list_gts_statements_rows, get_loop_interval_to_four_hour
 
 
 async def main():
