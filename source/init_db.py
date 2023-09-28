@@ -6,5 +6,5 @@ async def init_db():
     # Инициализируем нужные для работы таблицы
     await Tortoise.init(
         db_url=MYSQL_URL,
-        modules={'models': ["source.init_models"]},
+        modules={'models': ["init_models"]},
     )
