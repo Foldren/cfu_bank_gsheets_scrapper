@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timedelta
 from source.banks_services.tinkoff import Tinkoff
 from source.config import BANKS_RUS_NAMES
@@ -54,9 +55,10 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
     else:
         from_date = payment_account.last_date_reload_statement
 
+    statements = None
     match bank.bank_name:
         case 'tinkoff':
-            return await Tinkoff.get_statement(
+            statements = await Tinkoff.get_statement(
                 api_key=bank.api_key,
                 rc_number=payment_account.number,
                 from_date=from_date,
@@ -67,8 +69,10 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
             pass
 
     # Меняем дату последней подгрузки на сегодня
-    payment_account.last_date_reload_statement = datetime.now()
+    payment_account.last_date_reload_statement = datetime.date().today()
     await payment_account.save()
+
+    return statements
 
 
 async def generate_list_gts_statements_rows() -> list:
@@ -88,12 +92,14 @@ async def generate_list_gts_statements_rows() -> list:
         admin_partners = await admin.admin_partners.all().exclude(bank_reload_category_id=None)
 
         partners_inn_list = []
+        partners_names_list = []
         partners_category_queue_list = []
         for partner in admin_partners:
             partner_bank_reload_category = await partner.bank_reload_category
             cat_queue = await get_queue_categories_list_by_cat_id(partner_bank_reload_category.id)
             partners_inn_list.append(partner.inn)
             partners_category_queue_list.append(cat_queue)
+            partners_names_list.append(partner.name)
 
         # Шаг 2: Генерируем список строк которые нужно будет добавить в таблицу админа ---------------------------------
         admin_banks = await admin.admin_banks.all()
@@ -118,16 +124,16 @@ async def generate_list_gts_statements_rows() -> list:
 
                                 row_to_write_in_gt = [
                                     'Нет chat_id',
-                                    operation['partner_name'],
+                                    partners_names_list[index_partner_in_lists],
                                     operation['op_date'],
                                     operation['op_type'],
                                     BANKS_RUS_NAMES[bank.bank_name],
-                                    operation['volume'],
+                                    operation['op_volume'],
                                     organization_name,
                                 ]
 
                                 # Дополняем строку категориями из очереди
-                                category_numbs = 1
+                                category_numbs = 0
                                 for category in category_queue:
                                     category_numbs += 1
                                     row_to_write_in_gt.append(category)
