@@ -26,8 +26,8 @@ async def main():
             try:
                 print("[message]: START RELOAD")
                 lists_admins_rows = await generate_list_gts_statements_rows()
-
                 gt = GoogleTable()
+
                 for list_rows in lists_admins_rows:
                     try:
                         await gt.add_rows_to_bd_list(
@@ -43,8 +43,8 @@ async def main():
                 print("[error]: ERROR WITH RELOAD")
                 print(traceback.format_exc())
 
-        # Ждем 24 часа - 86400 секунд
-        await asyncio.sleep(LOOP_INTERVAL_TIME)
+            # Ждем 24 часа - 86400 секунд
+            await asyncio.sleep(LOOP_INTERVAL_TIME)
 
 
 if __name__ == "__main__":

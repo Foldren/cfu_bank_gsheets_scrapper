@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timedelta
 from banks_services.tinkoff import Tinkoff
 from config import BANKS_RUS_NAMES
@@ -68,7 +69,7 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
             pass
 
     # Меняем дату последней подгрузки на сегодня
-    payment_account.last_date_reload_statement = datetime.date().today()
+    payment_account.last_date_reload_statement = datetime.now().date()
     await payment_account.save()
 
     return statements
@@ -114,6 +115,8 @@ async def generate_list_gts_statements_rows() -> list:
                         bank_stats_operations = await get_payment_account_statement(payment_account)
                         payment_account_organization = await payment_account.organization.first()
                         organization_name = payment_account_organization.name
+
+                        print(bank_stats_operations)
 
                         for operation in bank_stats_operations:
                             # Проверяем привязана ли организация внутри бота, если да, привязываем очередь категории
