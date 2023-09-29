@@ -1,5 +1,7 @@
 import traceback
 from datetime import datetime, timedelta
+
+from banks_services.module_bank import ModuleBank
 from banks_services.tinkoff import Tinkoff
 from config import BANKS_RUS_NAMES
 from init_models import User, Category, PaymentAccount
@@ -64,7 +66,11 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
                 from_date=from_date,
             )
         case 'module':
-            pass
+            statements = await ModuleBank.get_statement(
+                api_key=bank.api_key,
+                rc_number=payment_account.number,
+                from_date=from_date,
+            )
         case 'tochka':
             pass
 

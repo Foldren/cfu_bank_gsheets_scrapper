@@ -16,3 +16,8 @@ BANKS_RUS_NAMES = {
     'module': 'Модуль',
     'tochka': 'Точка',
 }
+
+PROXY6NET_PROXIES = {
+    "socks5://": "socks5://4dn8mH:7Jo7er@194.5.10.188:8000",
+}
+
