@@ -48,6 +48,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    print(PROXY6NET_PROXIES)
     run_async(init_db())
     asyncio.run(main())
