@@ -18,6 +18,6 @@ BANKS_RUS_NAMES = {
 }
 
 PROXY6NET_PROXIES = {
-    "socks5://": "socks5://4dn8mH:7Jo7er@194.5.10.188:8000",
+    "socks5://": getenv("PROXY_HTTPS_URL") if IS_THIS_LOCAL else env('PROXY_HTTPS_URL'),
 }
 

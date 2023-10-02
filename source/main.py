@@ -2,7 +2,7 @@ import asyncio
 import traceback
 from tortoise import run_async
 from services.google_table import GoogleTable
-from config import LOOP_INTERVAL_TIME
+from config import LOOP_INTERVAL_TIME, PROXY6NET_PROXIES
 from init_db import init_db
 from tools import generate_list_gts_statements_rows, get_loop_interval_to_four_hour
 
@@ -48,5 +48,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    print(PROXY6NET_PROXIES)
     run_async(init_db())
     asyncio.run(main())

@@ -1,3 +1,4 @@
+from asyncio import run
 from datetime import datetime
 from httpx import AsyncClient
 from config import PROXY6NET_PROXIES
@@ -24,7 +25,7 @@ class Tinkoff:
             headers=headers,
             params={
                 'accountNumber': rc_number,
-                'limit': 10000,
+                'limit': 5000,
                 'from': from_date_frmt,
                 'to': datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
@@ -53,8 +54,8 @@ class Tinkoff:
             raise Exception(f"[error]: ERROR ON API TINKOFF:\n\n {response.text}")
 
 
-if __name__ == "__main__":
-    run(Tinkoff.get_statement(
-        api_key="t.qCm87E5ocCY4ziCoXaHQQMQ-NPLdmYmWueSTdPranxqPp4YbnJnFKtmGh7rYKoGmJxHIqP9yJMB9NLqxvTHe6A",
-        rc_number=40802810100002730336,
-        from_date="2023-01-01"))
+# if __name__ == "__main__":
+#     run(Tinkoff.get_statement(
+#         api_key="t.qCm87E5ocCY4ziCoXaHQQMQ-NPLdmYmWueSTdPranxqPp4YbnJnFKtmGh7rYKoGmJxHIqP9yJMB9NLqxvTHe6A",
+#         rc_number=40802810100002730336,
+#         from_date="2023-01-01"))

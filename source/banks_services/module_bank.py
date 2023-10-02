@@ -1,3 +1,4 @@
+import asyncio
 from asyncio import run
 from datetime import datetime
 from httpx import AsyncClient
@@ -56,7 +57,7 @@ class ModuleBank:
 
                 index_last_operation = len(r_operations_list) - 1
                 till_date_next = datetime \
-                    .strptime(r_operations_list[index_last_operation]['executed'], "%Y-%m-%dT%H:%M:%S")\
+                    .strptime(r_operations_list[index_last_operation]['executed'], "%Y-%m-%dT%H:%M:%S") \
                     .strftime("%Y-%m-%d")
 
                 result_operations_list += r_operations_list

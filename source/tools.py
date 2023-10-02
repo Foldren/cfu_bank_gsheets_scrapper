@@ -122,8 +122,6 @@ async def generate_list_gts_statements_rows() -> list:
                         payment_account_organization = await payment_account.organization.first()
                         organization_name = payment_account_organization.name
 
-                        print(bank_stats_operations)
-
                         for operation in bank_stats_operations:
                             # Проверяем привязана ли организация внутри бота, если да, привязываем очередь категории
                             if operation['partner_inn'] in partners_inn_list:
