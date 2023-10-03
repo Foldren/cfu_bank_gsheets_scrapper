@@ -44,8 +44,8 @@ class ModuleBank:
                     url=url_operation,
                     headers=headers,
                     json={
-                        'from': from_date,
-                        'till': till_date_next,
+                        'from': str(from_date),
+                        'till': str(till_date_next),
                         'records': 50,
                     }
                 )
