@@ -166,6 +166,7 @@ async def generate_list_gts_statements_rows() -> list:
 
                             rows_to_write_in_gt.append(row_to_write_in_gt)
                 except Exception:
+                    # print(traceback.format_exc())
                     continue
 
         # Шаг 3: Добавляем список таблиц и ссылку на таблицу админа в результат ----------------------------------------

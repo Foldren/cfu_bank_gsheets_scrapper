@@ -79,6 +79,8 @@ class ModuleBank:
                     'op_date': trxn_date,
                 })
 
+            result_data_list.reverse()
+
             return result_data_list
 
 
