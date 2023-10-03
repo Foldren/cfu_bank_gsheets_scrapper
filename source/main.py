@@ -1,9 +1,9 @@
 import asyncio
 import traceback
 from tortoise import run_async
-from services.google_table import GoogleTable
-from config import LOOP_INTERVAL_TIME, PROXY6NET_PROXIES
+from config import LOOP_INTERVAL_TIME
 from init_db import init_db
+from microservices.google_table import GoogleTable
 from tools import generate_list_gts_statements_rows, get_loop_interval_to_four_hour
 
 

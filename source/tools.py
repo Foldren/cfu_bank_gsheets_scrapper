@@ -1,8 +1,8 @@
 import traceback
 from datetime import datetime, timedelta
 
-from banks_services.module_bank import ModuleBank
-from banks_services.tinkoff import Tinkoff
+from banks_microservices.module_bank import ModuleBank
+from banks_microservices.tinkoff import Tinkoff
 from config import BANKS_RUS_NAMES
 from init_models import User, Category, PaymentAccount
 

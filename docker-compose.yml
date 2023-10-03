@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+  loop_upravlyaika:
+    build: .
+    image: loop_upravlyaika_reload_statements
+    container_name: LOOP__UpravlyaikaReloadStatements.every_day
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - /home/.VOLUMES/LOOP__UpravlyaikaReloadStatements.every_day/source:/source:rw
+    tty: true
+    working_dir: /source
+    command: ["python", "main.py"]
