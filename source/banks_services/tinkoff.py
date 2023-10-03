@@ -20,38 +20,51 @@ class Tinkoff:
         headers = {'Authorization': 'Bearer ' + api_key, 'Content-Type': 'application/json'}
         url_operation = 'https://business.tinkoff.ru/openapi/api/v1/statement'
 
-        response = await AsyncClient(proxies=PROXY6NET_PROXIES).get(
-            url=url_operation,
-            headers=headers,
-            params={
-                'accountNumber': rc_number,
-                'limit': 5000,
-                'from': from_date_frmt,
-                'to': datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-        )
+        # Получаем выписки, так как ограничение стоит на 5000 делаем это со смещением даты пока не выведем все ---------
+        result_operations_list = []
+        till_date_next = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        last_operations = []
+        while True:
+            r_operations = await AsyncClient(proxies=PROXY6NET_PROXIES).get(
+                url=url_operation,
+                headers=headers,
+                params={
+                    'accountNumber': rc_number,
+                    'limit': 5000,
+                    'from': str(from_date_frmt),
+                    'to': str(till_date_next),
+                }
+            )
 
-        if response.status_code == 200:
-            operations_list = response.json()['operations']
-            result_data_list = []
+            if r_operations.status_code != 200:
+                raise Exception(f"[error]: ERROR ON API TINKOFF:\n\n {r_operations.text}")
 
-            for operation in operations_list:
-                cp_name = operation['counterParty']["name"]
-                cp_inn = operation['counterParty']["inn"]
-                type_operation = "Расход" if operation["typeOfOperation"] == "Debit" else "Доход"
-                volume_operation = operation["operationAmount"]
-                trxn_date = datetime.strptime(operation["trxnPostDate"], '%Y-%m-%dT%H:%M:%SZ').strftime('%d.%m.%Y %H:%M')
-                result_data_list.append({
-                    'partner_inn': cp_inn,
-                    'partner_name': cp_name,
-                    'op_volume': volume_operation if type_operation == "Доход" else -round(volume_operation, 2),
-                    'op_type': type_operation,
-                    'op_date': trxn_date,
-                })
+            r_operations_list = r_operations.json()['operations']
 
-            return result_data_list
-        else:
-            raise Exception(f"[error]: ERROR ON API TINKOFF:\n\n {response.text}")
+            if last_operations == r_operations_list:
+                break
+
+            index_last_operation = len(r_operations_list) - 1
+            till_date_next = str(r_operations_list[index_last_operation]['trxnPostDate'])
+            result_operations_list += r_operations_list
+            last_operations = r_operations_list
+
+        result_data_list = []
+        for operation in result_operations_list:
+            cp_name = operation['counterParty']["name"]
+            cp_inn = operation['counterParty']["inn"]
+            type_operation = "Расход" if operation["typeOfOperation"] == "Debit" else "Доход"
+            volume_operation = operation["operationAmount"]
+            trxn_date = datetime.strptime(operation["trxnPostDate"], '%Y-%m-%dT%H:%M:%SZ').strftime('%d.%m.%Y %H:%M')
+            result_data_list.append({
+                'partner_inn': cp_inn,
+                'partner_name': cp_name,
+                'op_volume': volume_operation if type_operation == "Доход" else -round(volume_operation, 2),
+                'op_type': type_operation,
+                'op_date': trxn_date,
+            })
+
+        return result_data_list
 
 
 # if __name__ == "__main__":
