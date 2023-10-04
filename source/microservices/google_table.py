@@ -5,7 +5,7 @@ from config import NAME_GOOGLE_TABLE_BD_LIST
 
 class GoogleTable:
     agcm: AsyncioGspreadClientManager
-    json_creds_path = "source/upravlyaika-credentials.json"  # "universe_domain": "googleapis.com"
+    json_creds_path = "upravlyaika-credentials.json"  # "universe_domain": "googleapis.com"
 
     def __inti_credentials(self):
         creds = Credentials.from_service_account_file(self.json_creds_path)
