@@ -1,4 +1,5 @@
 import asyncio
+import json
 from asyncio import run
 from datetime import datetime
 from httpx import AsyncClient
@@ -32,6 +33,7 @@ class ModuleBank:
             for rc in r_company_info_json[0]['bankAccounts']:
                 if rc['number'] == str(rc_number):
                     account_id = rc['id']
+                    break
 
             url_operation = 'https://api.modulbank.ru/v1/operation-history/' + str(account_id)
 
@@ -68,13 +70,13 @@ class ModuleBank:
             for operation in result_operations_list:
                 cp_name = operation['contragentName']
                 cp_inn = operation['contragentInn']
-                type_operation = "Расход" if operation["category"] == "Debit" else "Доход"
+                type_operation = "Расход" if operation["category"] == "Credit" else "Доход"
                 volume_operation = operation["amount"] if type_operation == "Доход" else -round(operation["amount"], 2)
                 trxn_date = datetime.strptime(operation["executed"], '%Y-%m-%dT%H:%M:%S').strftime('%d.%m.%Y %H:%M')
                 result_data_list.append({
                     'partner_inn': cp_inn,
                     'partner_name': cp_name,
-                    'op_volume': volume_operation if type_operation == "Доход" else -round(volume_operation, 2),
+                    'op_volume': volume_operation,
                     'op_type': type_operation,
                     'op_date': trxn_date,
                 })
