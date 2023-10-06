@@ -31,7 +31,7 @@ async def main():
                 for list_rows in lists_admins_rows:
                     try:
                         await gt.add_rows_to_bd_list(
-                            table_url=list_rows['gt_table_url'],
+                            table_encr_url=list_rows['gt_table_url'],
                             rows_list=list_rows['rows_to_add_in_bd']
                         )
                     except Exception:

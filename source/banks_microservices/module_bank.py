@@ -1,6 +1,3 @@
-import asyncio
-import json
-from asyncio import run
 from datetime import datetime
 from httpx import AsyncClient
 from config import PROXY6NET_PROXIES
