@@ -6,3 +6,4 @@ aiomysql
 gspread-asyncio
 httpx[socks]
 socksio
+cryptography~=41.0.4
