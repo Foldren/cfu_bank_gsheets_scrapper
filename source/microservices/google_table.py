@@ -1,6 +1,7 @@
+from cryptography.fernet import Fernet
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
-from config import NAME_GOOGLE_TABLE_BD_LIST
+from config import NAME_GOOGLE_TABLE_BD_LIST, SECRET_KEY
 
 
 class GoogleTable:
@@ -19,16 +20,17 @@ class GoogleTable:
     def __init__(self):
         self.agcm = AsyncioGspreadClientManager(self.__inti_credentials)
 
-    async def add_rows_to_bd_list(self, table_url: str, rows_list: list):
+    async def add_rows_to_bd_list(self, table_encr_url: str, rows_list: list):
         """
         Функция для добавления массива строк в таблицу
 
-        :param table_url: ссылка на таблицу
+        :param table_encr_url: ссылка на таблицу
         :param rows_list: лист строк для google table
         """
 
+        table_decr_url = Fernet(SECRET_KEY).decrypt(table_encr_url).decode("utf-8")
         agc = await self.agcm.authorize()
-        ss = await agc.open_by_url(table_url)
+        ss = await agc.open_by_url(table_decr_url)
         ws = await ss.worksheet(NAME_GOOGLE_TABLE_BD_LIST)
 
         # value_input_option='USER_ENTERED' решает проблему с апострофом который появляется в таблице
