@@ -1,6 +1,7 @@
 from tortoise import Model
 from tortoise.fields import IntField, TextField, BooleanField, ManyToManyField, ForeignKeyField, OnDelete, \
-    ManyToManyRelation, ForeignKeyRelation, OneToOneRelation, ReverseRelation, OneToOneField, BigIntField, DateField
+    ManyToManyRelation, ForeignKeyRelation, OneToOneRelation, ReverseRelation, OneToOneField, BigIntField, DateField, \
+    BinaryField
 
 
 class User(Model):
@@ -67,7 +68,7 @@ class Bank(Model):
     payment_accounts: ReverseRelation['PaymentAccount']
     custom_name = TextField(maxlength=200, null=False)
     bank_name = TextField(maxlength=200, null=False)
-    api_key = TextField(maxlength=500, null=False)
+    api_key = BinaryField(null=False)
 
     class Meta:
         table = "banks"

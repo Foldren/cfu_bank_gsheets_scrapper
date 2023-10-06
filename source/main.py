@@ -43,8 +43,8 @@ async def main():
                 print("[error]: ERROR WITH RELOAD")
                 print(traceback.format_exc())
 
-            # Ждем 24 часа - 86400 секунд
-            await asyncio.sleep(LOOP_INTERVAL_TIME)
+        # Ждем 24 часа - 86400 секунд
+        await asyncio.sleep(LOOP_INTERVAL_TIME)
 
 
 if __name__ == "__main__":

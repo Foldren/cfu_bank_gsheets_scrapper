@@ -16,7 +16,7 @@ BANKS_RUS_NAMES = {
     'module': 'Модуль',
     'tochka': 'Точка',
 }
-
+SECRET_KEY = env('SECRET_KEY')
 PROXY6NET_PROXIES = {
     "socks5://": getenv("PROXY_HTTPS_URL") if IS_THIS_LOCAL else env('PROXY_HTTPS_URL'),
 }

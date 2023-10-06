@@ -1,9 +1,11 @@
 import traceback
 from datetime import datetime, timedelta
 
+from cryptography.fernet import Fernet
+
 from banks_microservices.module_bank import ModuleBank
 from banks_microservices.tinkoff import Tinkoff
-from config import BANKS_RUS_NAMES
+from config import BANKS_RUS_NAMES, SECRET_KEY
 from init_models import User, Category, PaymentAccount
 
 
@@ -50,6 +52,7 @@ async def get_queue_categories_list_by_cat_id(category_id: int):
 
 async def get_payment_account_statement(payment_account: PaymentAccount) -> list:
     bank = await payment_account.bank
+    decrypt_api_key = Fernet(SECRET_KEY).decrypt(bank.api_key).decode('utf-8')
 
     # Фиксируем дату, с которой нужно начать подгрузку операций из выписок
     if payment_account.last_date_reload_statement is None:
@@ -61,13 +64,13 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
     match bank.bank_name:
         case 'tinkoff':
             statements = await Tinkoff.get_statement(
-                api_key=bank.api_key,
+                api_key=decrypt_api_key,
                 rc_number=payment_account.number,
                 from_date=from_date,
             )
         case 'module':
             statements = await ModuleBank.get_statement(
-                api_key=bank.api_key,
+                api_key=decrypt_api_key,
                 rc_number=payment_account.number,
                 from_date=from_date,
             )
@@ -166,8 +169,8 @@ async def generate_list_gts_statements_rows() -> list:
 
                             rows_to_write_in_gt.append(row_to_write_in_gt)
                 except Exception:
-                    # print(traceback.format_exc())
-                    continue
+                    print(traceback.format_exc())
+                    # continue
 
         # Шаг 3: Добавляем список таблиц и ссылку на таблицу админа в результат ----------------------------------------
         admin_info = await admin.admin_info.all()
