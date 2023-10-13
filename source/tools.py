@@ -5,6 +5,7 @@ from cryptography.fernet import Fernet
 
 from banks_microservices.module_bank import ModuleBank
 from banks_microservices.tinkoff import Tinkoff
+from banks_microservices.tochka_bank import TochkaBank
 from config import BANKS_RUS_NAMES, SECRET_KEY
 from init_models import User, Category, PaymentAccount
 
@@ -75,7 +76,11 @@ async def get_payment_account_statement(payment_account: PaymentAccount) -> list
                 from_date=from_date,
             )
         case 'tochka':
-            pass
+            statements = await TochkaBank.get_statement(
+                api_key=decrypt_api_key,
+                rc_number=payment_account.number,
+                from_date=from_date,
+            )
 
     # Меняем дату последней подгрузки на сегодня
     payment_account.last_date_reload_statement = datetime.now().date()
