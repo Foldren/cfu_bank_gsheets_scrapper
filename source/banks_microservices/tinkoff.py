@@ -49,6 +49,7 @@ class Tinkoff:
             result_operations_list += r_operations_list
             last_operations = r_operations_list
 
+        # Получаем транзакции  -----------------------------------------------------------------------------------------
         result_data_list = []
         for operation in result_operations_list:
             cp_name = operation['counterParty']["name"]
