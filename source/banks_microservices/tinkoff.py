@@ -1,3 +1,4 @@
+import json
 from asyncio import run
 from datetime import datetime
 from httpx import AsyncClient
@@ -22,7 +23,7 @@ class Tinkoff:
 
         # Получаем выписки, так как ограничение стоит на 5000 делаем это со смещением даты пока не выведем все ---------
         result_operations_list = []
-        till_date_next = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        till_date_frmt = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         last_operations = []
         while True:
             r_operations = await AsyncClient(proxies=PROXY6NET_PROXIES).get(
@@ -32,7 +33,8 @@ class Tinkoff:
                     'accountNumber': rc_number,
                     'limit': 5000,
                     'from': str(from_date_frmt),
-                    'to': str(till_date_next),
+                    'to': str(till_date_frmt),
+                    'operationStatus': ['Transaction'],
                 }
             )
 
@@ -41,11 +43,11 @@ class Tinkoff:
 
             r_operations_list = r_operations.json()['operations']
 
-            if last_operations == r_operations_list:
+            if (last_operations == r_operations_list) or (not r_operations_list):
                 break
 
             index_last_operation = len(r_operations_list) - 1
-            till_date_next = str(r_operations_list[index_last_operation]['trxnPostDate'])
+            from_date_frmt = str(r_operations_list[index_last_operation]['trxnPostDate'])
             result_operations_list += r_operations_list
             last_operations = r_operations_list
 

@@ -1,5 +1,6 @@
+from asyncio import sleep
 from datetime import datetime
-from httpx import AsyncClient
+from httpx import AsyncClient, ConnectError
 from config import PROXY6NET_PROXIES
 
 
@@ -18,7 +19,13 @@ class ModuleBank:
 
         async with AsyncClient(proxies=PROXY6NET_PROXIES) as async_session:
             # Получаем информацию о компании ---------------------------------------------------------------------------
-            r_company_info = await async_session.post("https://api.modulbank.ru/v1/account-info", headers=headers)
+            while True:
+                try:
+                    r_company_info = await async_session.post("https://api.modulbank.ru/v1/account-info", headers=headers)
+                except ConnectError:
+                    await sleep(1)
+                    continue
+                break
 
             if r_company_info.status_code != 200:
                 raise Exception(f"[error]: ERROR ON API MODULE:\n\n {r_company_info.text}")
@@ -36,26 +43,27 @@ class ModuleBank:
 
             # Получаем выписки, так как ограничение стоит на 50 делаем это со смещением даты пока не выведем все -------
             result_operations_list = []
-            till_date_next = datetime.now().strftime("%Y-%m-%d")
+            till_date = datetime.now().strftime("%Y-%m-%d")
             last_operations = []
             while True:
                 r_operations = await async_session.post(
                     url=url_operation,
                     headers=headers,
                     json={
+                        'statuses': 'Executed',
                         'from': str(from_date),
-                        'till': str(till_date_next),
+                        'till': str(till_date),
                         'records': 50,
                     }
                 )
 
                 r_operations_list = r_operations.json()
 
-                if last_operations == r_operations_list:
+                if (last_operations == r_operations_list) or (not r_operations_list):
                     break
 
                 index_last_operation = len(r_operations_list) - 1
-                till_date_next = datetime \
+                from_date = datetime \
                     .strptime(r_operations_list[index_last_operation]['executed'], "%Y-%m-%dT%H:%M:%S") \
                     .strftime("%Y-%m-%d")
 
