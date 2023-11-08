@@ -1,13 +1,11 @@
 import traceback
 from datetime import datetime, timedelta
-
 from cryptography.fernet import Fernet
-
 from banks_microservices.module_bank import ModuleBank
 from banks_microservices.tinkoff import Tinkoff
 from banks_microservices.tochka_bank import TochkaBank
 from config import BANKS_RUS_NAMES, SECRET_KEY
-from init_models import User, Category, PaymentAccount
+from init_models import User, Category, PaymentAccount, Partner
 
 
 async def get_loop_interval_to_four_hour():
@@ -104,10 +102,13 @@ async def generate_list_gts_statements_rows() -> list:
         # Шаг 1: генерируем список категорий, к которым прикреплены Инн контрагентов -----------------------------------
         # (для сравнения с операциями из банков)
         admin_partners = await admin.admin_partners.all().exclude(bank_reload_category_id=None)
+        admin_partners_inns_not_distribute = await admin.admin_partners.all().filter(
+            bank_reload_category_id=None).values_list("inn", flat=True)
 
         partners_inn_list = []
         partners_names_list = []
         partners_category_queue_list = []
+        partners_new_inn_list = []
         for partner in admin_partners:
             partner_bank_reload_category = await partner.bank_reload_category
             cat_queue = await get_queue_categories_list_by_cat_id(partner_bank_reload_category.id)
@@ -163,6 +164,16 @@ async def generate_list_gts_statements_rows() -> list:
                                     organization_name,
                                     'Без распределения'
                                 ]
+
+                                if (operation['partner_inn'] not in partners_new_inn_list) \
+                                    and operation['partner_inn'] \
+                                        and (operation['partner_inn'] not in admin_partners_inns_not_distribute):
+                                    await Partner.create(
+                                        admin_id=admin.chat_id,
+                                        inn=int(float(operation['partner_inn'])),
+                                        name=operation['partner_name']
+                                    )
+                                    partners_new_inn_list.append(operation['partner_inn'])
                                 category_numbs = 1
 
                             # Заполняем оставшиеся поля пустыми строками
@@ -187,4 +198,3 @@ async def generate_list_gts_statements_rows() -> list:
             })
 
     return admins_rows_in_gts
-
