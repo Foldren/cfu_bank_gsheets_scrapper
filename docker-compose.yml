@@ -1,13 +1,16 @@
 version: "3.3"
 services:
-  loop_upravlyaika:
+  upravlyaika_scrapper:
     build: .
-    image: loop_upravlyaika_reload_statements
-    container_name: LOOP__UpravlyaikaReloadStatements.every_day
+    container_name: upravlyaika_scrapper
+    restart: always
     environment:
       - TZ=Europe/Moscow
-    volumes:
-      - /home/.VOLUMES/LOOP__UpravlyaikaReloadStatements.every_day/source:/source:rw
-    tty: true
-    working_dir: /source
-    command: ["python", "main.py"]
+    env_file:
+      - ./source/.env
+    networks:
+      - uprav_cfu_network
+
+networks:
+  uprav_cfu_network:
+    external: true
