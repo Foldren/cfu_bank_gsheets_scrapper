@@ -1,7 +1,6 @@
 tortoise-orm
 tortoise-orm[asyncmy]
 httpx~=0.25.0
-environs~=9.5.0
 aiomysql
 gspread-asyncio
 httpx[socks]
