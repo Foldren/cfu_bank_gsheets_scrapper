@@ -3,7 +3,7 @@ import traceback
 from tortoise import run_async
 from config import LOOP_INTERVAL_TIME
 from init_db import init_db
-from microservices.google_table import GoogleTable
+from modules.google_table import GoogleTable
 from tools import generate_list_gts_statements_rows, get_loop_interval_to_four_hour
 
 

@@ -1,9 +1,9 @@
 import traceback
 from datetime import datetime, timedelta
 from cryptography.fernet import Fernet
-from banks_microservices.module_bank import ModuleBank
-from banks_microservices.tinkoff import Tinkoff
-from banks_microservices.tochka_bank import TochkaBank
+from banks.module import ModuleBank
+from banks.tinkoff import Tinkoff
+from banks.tochka import TochkaBank
 from config import BANKS_RUS_NAMES, SECRET_KEY
 from init_models import User, Category, PaymentAccount, Partner
 
